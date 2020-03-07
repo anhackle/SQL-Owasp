@@ -8,7 +8,18 @@ const session = require('express-session');
 const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose');
 
+
+const https = require('https');
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+
+
 const app = express();
+https.createServer(options, app).listen(443);
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
@@ -95,6 +106,6 @@ app.post("/login",  function(req, res) {
 });
 
 
-app.listen(3000, function () {
+app.listen(80, function () {
     console.log("Server is listening on port 3000");
 })
