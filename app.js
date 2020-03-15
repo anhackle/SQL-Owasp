@@ -1,111 +1,83 @@
 //jshint esversion:6
-require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const ejs =require('ejs');
-const mongoose = require('mongoose');
-const session = require('express-session');
-const passport = require('passport');
-const passportLocalMongoose = require('passport-local-mongoose');
-
-
-const https = require('https');
-const fs = require('fs');
-
-const options = {
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem')
-};
-
+const ejs = require('ejs');
+const mysql = require('mysql');
 
 const app = express();
-https.createServer(options, app).listen(443);
+app.disable('etag');
+
+var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "nguyencaothai123#",
+    database: "secret_db"
+});
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ 
-    extended: true 
+app.use(bodyParser.urlencoded({
+    extended: true
 }));
-app.use(session({
-    secret: "Our little secret.",
-    resave: false,
-    saveUninitialized: false
-}))
-app.use(passport.initialize());
-app.use(passport.session());
 
-
-//connect to database
-mongoose.connect("mongodb://localhost:27017/userDB",  { useUnifiedTopology: true, useNewUrlParser: true });
-
-//create User table
-const userSchema = new mongoose.Schema ({
-    email: String,
-    password: String
-});
-userSchema.plugin(passportLocalMongoose);
-const User = new mongoose.model("User", userSchema);
-
-passport.use(User.createStrategy());
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
-
-
-app.get("/", function(req, res) {
-    res.render("home");
-});
-
-app.get("/login", function(req,res) {
-    res.render("login"); 
-});
-
-app.get("/register", function (req, res) {
-    res.render("register"); 
-});
-
-app.get("/secrets", function(req,res){
-    if (req.isAuthenticated()){
-        res.render("secrets");
-    }else{
-        res.redirect("/login");
-    }
-});
-
-app.get("/logout", function(req,res){
-    req.logout();
-    res.redirect("/");
-});
-
-app.post("/register", function (req, res) {
-    User.register({username: req.body.username},  req.body.password, function(err,  user){
+app.get("/", function (req, res) {
+    query = `select * from secret_db.items where released=1`;
+    con.query(query, function(err,  results) {
         if (err){
-            console.log(err);
-            res.redirect("/register");
+            res.send(err.sqlMessage);
         }else{
-            passport.authenticate("local")(req,res,function(){
-                res.redirect("/secrets");
-            });
-        };
+            res.render("start", {results:results});
+        }
     });
 });
 
-app.post("/login",  function(req, res) {
-    const user = new User({
-        username: req.body.username,
-        password: req.body.password
-    });
-    req.login(user, function(err){
+app.get("/filter", function(req,res){
+    var category = req.query.category;
+    query = `select * from secret_db.items where type='${category}' and released=1;`
+    console.log(query);
+    con.query(query, function(err, results){
         if (err){
-            console.log(err);
+            res.send(err.sqlMessage);
         }else{
-            passport.authenticate("local")(req,res, function(){
-                res.redirect("secrets");
-            });
+            res.render("start", {results:results});
         }
     });
 });
 
 
-app.listen(80, function () {
+app.get("/login", function (req, res) {
+    var login_failed = 1;
+    res.render("login", {login_failed:login_failed});
+});
+
+app.get("/register", function (req, res) {
+    res.render("register");
+});
+
+app.get("/secrets", function (req, res) {
+    res.render("secrets");
+}) 
+
+app.post("/register", function (req, res) {});
+
+app.post("/login", function (req, res) {
+    username = req.body.username;
+    password = req.body.password;
+    query = `select * from secret_db.users where username='${username}' and password='${password}';`;
+    con.query(query, function(error, results){
+        if (error){
+            res.send(error.sqlMessage);
+        }else{
+            if (results.length > 0){
+                res.render("secrets");
+            }else{
+                var login_failed = 0;
+                res.render("login", {login_failed:login_failed});
+            }
+        }
+    });
+});
+
+app.listen(3000, function () {
     console.log("Server is listening on port 3000");
 })

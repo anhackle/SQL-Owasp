@@ -1,0 +1,16 @@
+<%- include('partials/header') %>
+<img style="display:block; margin-top: 5%;margin-left:auto;margin-right:auto;width:400px; text-align: center;" src="images/shop.svg">
+<section class="search-filters">
+    <a href="/">All</a>
+    <a href="/filter?category=shoe">Shoes</a>
+    <a href="/filter?category=story">Story</a>
+    <a style="text-align: right;" href="/login">Account Login</a>
+</section>
+<section class="container-list-tiles">
+    <% for (var i = 0; i < results.length; i++) { %>
+        <div>
+            <img src=<%=results[i].path %>>
+        </div>
+    <% } %>
+</section>
+<%- include('partials/footer') %>
