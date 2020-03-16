@@ -6,6 +6,11 @@
     <a href="/filter?category=story">Story</a>
     <a style="text-align: right;" href="/login">Account Login</a>
 </section>
+
+<% if (visited == true){ %>
+    <p align="right" style="font-size: 25px; margin-right: 50px;">Welcome back!</p>
+<% } %>
+
 <section class="container-list-tiles">
     <% for (var i = 0; i < results.length; i++) { %>
         <div>
