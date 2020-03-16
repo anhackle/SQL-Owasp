@@ -34,13 +34,9 @@ function checkingTrackingid(trackingId, callback) {
     query = `select * from secret_db.trackedusers where trackingid = '${trackingId}';`;
     con.query(query, function (err, results) {
         if (err) {
-            callback(false);
-        } else {
-            if (results.length > 0) {
-                callback(true);
-            } else {
-                callback(false);
-            }
+            callback("Internal Server Error");
+        }else{
+            callback(true);
         }
     });
 }
@@ -69,10 +65,13 @@ app.get("/", function (req, res) {
                 });
             }
             checkingTrackingid(req.cookies.trackingid, (visited) => {
-                res.render("start", {
-                    results: results,
-                    visited: visited
-                });
+                if (typeof(visited) == "string"){
+                    res.send(visited);
+                }else{
+                    res.render("start", {
+                        results: results
+                    });
+                }
             });
         }
     });
@@ -86,10 +85,13 @@ app.get("/filter", function (req, res) {
             res.send(err.sqlMessage);
         } else {
             checkingTrackingid(req.cookies.trackingid, (visited) => {
-                res.render("start", {
-                    results: results,
-                    visited: visited
-                });
+                if (typeof(visited) == "string"){
+                    res.send(visited);
+                }else{
+                    res.render("start", {
+                        results: results
+                    });
+                }
             });
         }
     });
