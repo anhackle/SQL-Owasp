@@ -31,13 +31,9 @@ function randomStr(len, arr) {
 }
 
 function checkingTrackingid(trackingId, callback) {
-    query = `select * from secret_db.trackedusers where trackingid = '${trackingId}';`;
-    con.query(query, function (err, results) {
-        if (err) {
-            callback("Internal Server Error");
-        }else{
-            callback(true);
-        }
+    query = `select * from secret_db.trackedusers where trackingid = ?;`;
+    con.query(query, [trackingId],function (err, results) {
+        callback(true);
     });
 }
 
@@ -65,13 +61,9 @@ app.get("/", function (req, res) {
                 });
             }
             checkingTrackingid(req.cookies.trackingid, (visited) => {
-                if (typeof(visited) == "string"){
-                    res.send(visited);
-                }else{
-                    res.render("start", {
-                        results: results
-                    });
-                }
+                res.render("start", {
+                    results: results
+                });
             });
         }
     });
@@ -80,18 +72,15 @@ app.get("/", function (req, res) {
 app.get("/filter", function (req, res) {
     var category = req.query.category;
     query = `select * from secret_db.items where type= ? and released=1;`
-    con.query(query, [category], function (err, results) {
+    console.log(query);
+    con.query(query,[category], function (err, results) {
         if (err) {
             res.send(err.sqlMessage);
         } else {
             checkingTrackingid(req.cookies.trackingid, (visited) => {
-                if (typeof(visited) == "string"){
-                    res.send(visited);
-                }else{
-                    res.render("start", {
-                        results: results
-                    });
-                }
+                res.render("start", {
+                    results: results
+                });
             });
         }
     });
@@ -118,8 +107,8 @@ app.post("/register", function (req, res) {});
 app.post("/login", function (req, res) {
     username = req.body.username;
     password = req.body.password;
-    query = `select * from secret_db.users where username='${username}' and password='${password}';`;
-    con.query(query, function (error, results) {
+    query = `select * from secret_db.users where username= ? and password= ? ;`;
+    con.query(query, [username,password],function (error, results) {
         if (error) {
             res.send(error.sqlMessage);
         } else {
